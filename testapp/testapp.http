@@ -1,0 +1,115 @@
+@testapp_HostAddress = http://localhost:5091
+
+### Index
+GET {{testapp_HostAddress}}/
+Accept: application/json
+
+### health / telemetry-backend connectivity (no tracing/logs/metrics emitted)
+GET {{testapp_HostAddress}}/health
+Accept: application/json
+
+### --- Traces ---
+
+### simple span
+GET {{testapp_HostAddress}}/traces/simple
+Accept: application/json
+
+### span with explicit OK status
+GET {{testapp_HostAddress}}/traces/ok
+Accept: application/json
+
+### two traces with a span link from the second to the first
+GET {{testapp_HostAddress}}/traces/linked
+Accept: application/json
+
+### nested spans (depth 1-10)
+GET {{testapp_HostAddress}}/traces/nested?depth=4
+Accept: application/json
+
+### parallel sibling spans (count 1-20)
+GET {{testapp_HostAddress}}/traces/parallel?count=5
+Accept: application/json
+
+### slow span (ms 0-30000)
+GET {{testapp_HostAddress}}/traces/slow?ms=500
+Accept: application/json
+
+### erroring span (type: invalid|timeout|argument|notfound)
+GET {{testapp_HostAddress}}/traces/error?type=invalid
+Accept: application/json
+
+### distributed (hops 0-5; each hop produces a client+server span pair)
+GET {{testapp_HostAddress}}/traces/distributed?hops=2
+Accept: application/json
+
+### span with diverse attribute types and events
+GET {{testapp_HostAddress}}/traces/attributes
+Accept: application/json
+
+### --- Logs ---
+
+### one log per severity level
+GET {{testapp_HostAddress}}/logs/levels
+Accept: application/json
+
+### structured logs with parameters
+GET {{testapp_HostAddress}}/logs/structured?count=5&user=alice
+Accept: application/json
+
+### error log carrying an exception
+GET {{testapp_HostAddress}}/logs/exception
+Accept: application/json
+
+### scoped logs (BeginScope)
+GET {{testapp_HostAddress}}/logs/scoped
+Accept: application/json
+
+### log correlated to an active trace
+GET {{testapp_HostAddress}}/logs/correlated
+Accept: application/json
+
+### --- Metrics ---
+
+### counter increment
+POST {{testapp_HostAddress}}/metrics/counter?inc=3&label=api
+Accept: application/json
+
+### up-down counter
+POST {{testapp_HostAddress}}/metrics/updown?delta=1
+Accept: application/json
+
+### histogram observation
+POST {{testapp_HostAddress}}/metrics/histogram?value=42.7&op=read
+Accept: application/json
+
+### observable gauge value
+POST {{testapp_HostAddress}}/metrics/gauge?value=12
+Accept: application/json
+
+### --- Composite scenarios ---
+
+### successful user transaction (trace + logs + metrics)
+GET {{testapp_HostAddress}}/scenarios/user-transaction
+Accept: application/json
+
+### error cascade (correlated trace + error log + counter)
+GET {{testapp_HostAddress}}/scenarios/error-cascade
+Accept: application/json
+
+### --- Telemetry control ---
+
+### force-flush all OTLP exporters (use before querying the backend in E2E tests)
+POST {{testapp_HostAddress}}/telemetry/flush
+Accept: application/json
+
+### force-flush with a custom timeout
+POST {{testapp_HostAddress}}/telemetry/flush?timeoutMs=10000
+Accept: application/json
+
+### --- Lifecycle ---
+
+### graceful shutdown (202 Accepted, then host tears down and flushes OTLP)
+POST {{testapp_HostAddress}}/shutdown
+Accept: application/json
+
+###
